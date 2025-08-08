@@ -36,7 +36,7 @@ class DataSerializer:
             Wraps an image pair into tf.train.Example.
     """
     def __init__(self):
-        pass
+        LOGGER.info("DataSerializer initialized.")
 
 
     def load_and_encode_images(self, img_path: str) -> tf.image.encode_png:
@@ -54,7 +54,6 @@ class DataSerializer:
         # Convert to numpy and add channel dimension: [H, W] → [H, W, 1]
         image_array = tf.convert_to_tensor(image, dtype=tf.uint8)
         image_array = tf.expand_dims(image_array, axis=-1)  # Now shape is (H, W, 1)
-        LOGGER.info(f"Image size after expanding dims: {image_array.shape}")
         return tf.image.encode_png(image_array)
     
 
@@ -88,6 +87,7 @@ class DataSerializer:
         Returns:
             None: Writes the serialized data to a TFRecord file.
         """
+        LOGGER.info(f"Serializing {set} dataset...")
         # Get image pairs
         image_pairs = self._get_image_pairs(set)
 
