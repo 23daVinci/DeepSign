@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import pandas as pd
 import logging
+import matplotlib.pyplot as plt
 
 from utils import load_config 
 
@@ -145,9 +146,38 @@ class DataSerializer:
 
 
 
-class DataPreprocessor:
+class DataParser:
     def __init__(self):
-        pass
+        LOGGER.info("DataParser initialized.")
+        self.dataset = None
+
+    
+    def test_batches(self, num_batches: int = 1):
+        """        
+        Displays a few batches of images from the dataset for visual inspection.
+        
+        Args:
+            num_batches (int): Number of batches to display. Default is 1.
+
+        Returns:
+            None: Displays images using matplotlib.
+        """
+        for (img1_batch, img2_batch), labels in self.dataset.take(num_batches):
+            batch_size = img1_batch.shape[0]
+            for i in range(batch_size):
+                plt.figure(figsize=(4,2))
+                
+                plt.subplot(1,2,1)
+                plt.imshow(img1_batch[i, :, :, 0], cmap='gray')
+                plt.title("Image 1")
+                plt.axis('off')
+                
+                plt.subplot(1,2,2)
+                plt.imshow(img2_batch[i, :, :, 0], cmap='gray')
+                plt.title(f"Image 2\nLabel: {labels[i].numpy()}")
+                plt.axis('off')
+                
+                plt.show()
 
 
     def parse_example(self, example_proto):
@@ -166,6 +196,7 @@ class DataPreprocessor:
         try:
             parsed = tf.io.parse_single_example(example_proto, feature_description)
         except tf.errors.InvalidArgumentError as e:
+            LOGGER.error(f"Failed to parse example: {e}")
             raise ValueError(f"Failed to parse example: {e}")
         
         img1 = tf.image.decode_png(parsed['image1'], channels=1)
@@ -189,15 +220,19 @@ class DataPreprocessor:
             tf.data.Dataset: A TensorFlow dataset ready for training.
         """
         try:
+            print(f"Loading TFRecord file from: {tfrecord_path}")
             dataset = tf.data.TFRecordDataset(tfrecord_path)
         except Exception as e:
+            LOGGER.error(f"TFRecord file not found at {tfrecord_path}: {e}")
             raise FileNotFoundError(f"TFRecord file not found at {tfrecord_path}: {e}")
         
+        # Apply parsing function to each example in the dataset
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.shuffle(2048)
+        dataset = dataset.shuffle(2048) 
         dataset = dataset.batch(batch_size)
-        #dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
+        self.dataset = dataset
         return dataset
 
 
@@ -205,7 +240,8 @@ class DataPreprocessor:
 
 
 if __name__ == "__main__":
-    serializer = DataSerializer()
-    serializer.serialize('train')
-    #data_preprocessor = DataPreprocessor()
-    #ds = data_preprocessor.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
+    #serializer = DataSerializer()
+    #serializer.serialize('train')
+    data_parser = DataParser()
+    ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
+    data_parser.test_batches(num_batches=1)
