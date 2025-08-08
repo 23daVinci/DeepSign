@@ -1,0 +1,50 @@
+# config.yaml
+
+project:
+  name: signature-verification
+  seed: 42
+  device: "cpu"  # or "cuda"
+
+data:
+  dataset_name: IDCAR 2011
+  train_dir: "../data/sign_data/train"
+  #val_dir: "../data/sign_data/val"
+  test_dir: "../data/sign_data/test"
+  train_pairs: "../data/sign_data/train_data.csv"
+  test_pairs: "../data/sign_data/test_data.csv"
+  train_serialized_path: "../data/sign_data/train_pairs.tfrecord"
+  img_height: 128
+  img_width: 256
+  batch_size: 32
+  num_workers: 1
+
+model:
+  architecture: "SiameseNet"
+  embedding_dim: 128
+  pretrained: False
+
+training:
+  epochs: 50
+  learning_rate: 0.001
+  optimizer: "adam"
+  weight_decay: 1e-5
+  early_stopping: True
+  patience: 5
+  lr_scheduler: "StepLR"
+  step_size: 10
+  gamma: 0.1
+
+logging:
+  log_dir: "logs/"
+  use_wandb: True
+  wandb_project: "signature-verification"
+
+checkpoint:
+  save_dir: "checkpoints/"
+  save_best_only: True
+  monitor: "val_loss"
+
+augmentation:
+  horizontal_flip: True
+  rotation_range: 15
+  brightness_range: [0.8, 1.2]
