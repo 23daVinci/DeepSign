@@ -3,7 +3,6 @@ import io
 import os
 from PIL import Image
 import pandas as pd
-import matplotlib.pyplot as plt
 import logging
 
 from utils import load_config 
