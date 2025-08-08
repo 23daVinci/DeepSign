@@ -228,7 +228,7 @@ class DataParser:
         
         # Apply parsing function to each example in the dataset
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.shuffle(2048) 
+        dataset = dataset.shuffle(CONFIG['data']['shuffle_buffer_size']) 
         dataset = dataset.batch(batch_size)
         dataset = dataset.prefetch(tf.data.AUTOTUNE)
 

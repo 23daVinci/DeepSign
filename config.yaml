@@ -17,6 +17,7 @@ data:
   img_width: 256
   batch_size: 32
   num_workers: 1
+  shuffle_buffer_size: 2048
 
 model:
   architecture: "SiameseNet"
