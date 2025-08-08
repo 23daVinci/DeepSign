@@ -1,4 +1,4 @@
-# 🖋️ Signature Verification with Siamese Network (IDCAR Dataset)
+# 🖋️ DeepSign
 
 This project implements a **production-ready pipeline** to train a **Siamese Neural Network** for **offline signature verification** using the [IDCAR signature dataset](https://www.researchgate.net/publication/335391564_IDCAR_A_New_Indian_Dataset_for_Offline_Signature_Verification).
 
