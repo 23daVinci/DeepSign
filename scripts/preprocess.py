@@ -33,8 +33,12 @@ class DataSerializer:
     Methods:
         load_and_encode_images(img_path: str) -> tf.image.encode_png:
             Loads an image from its path, converts it to grayscale, and standardizes it.
+        
         create_example(img1_bytes: tf.image.encode_png, img2_bytes: tf.image.encode_png, label) -> tf.train.Example:
             Wraps an image pair into tf.train.Example.
+
+        serialize(set: str) -> None:
+            Serializes image pairs into a TFRecord file.
     """
     def __init__(self):
         LOGGER.info("DataSerializer initialized.")
@@ -147,6 +151,20 @@ class DataSerializer:
 
 
 class DataParser:
+    """ 
+    Class to parse TFRecord files into TensorFlow datasets for training a signature matching model.
+    
+    Methods:
+        test_batches(num_batches: int = 1):
+            Displays a few batches of images from the dataset for visual inspection.
+        
+        parse_example(example_proto):
+            Parses a single TFRecord example into image tensors and label.
+            
+        get_dataset(tfrecord_path: str, batch_size: int = 32) -> tf.data.Dataset:
+            Creates a TensorFlow dataset from a TFRecord file.
+    """
+
     def __init__(self):
         LOGGER.info("DataParser initialized.")
         self.dataset = None
@@ -241,7 +259,12 @@ class DataParser:
 
 if __name__ == "__main__":
     #serializer = DataSerializer()
+    # Serialize the training dataset
     #serializer.serialize('train')
+
     data_parser = DataParser()
+    # Parse the training TFRecord file and create a dataset
     ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
-    data_parser.test_batches(num_batches=1)
+
+    # Test the dataset by displaying a few batches of images
+    #data_parser.test_batches(num_batches=1)
