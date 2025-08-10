@@ -25,10 +25,12 @@ logging.basicConfig(level=logging.INFO,
 class DeepSign:
     def __init__(self):
         LOGGER.info("DeepSign model initialized.")
-        pass
 
     
     def get_model_summary(self) -> None:
+        """
+        Saves the model summary to a text file.
+        """
         with open('../artifacts/model_summary.txt', 'w', encoding="utf-8") as f:
             model = self.build_model(
                 input_shape=(CONFIG['data']['img_height'], CONFIG['data']['img_width'], 1),
@@ -37,7 +39,7 @@ class DeepSign:
             model.summary(print_fn=lambda x: f.write(x + '\n'))
         print("Model summary saved to 'artifacs/model_summary.txt'")
 
-    
+
     def conv_block(self, x: tf.Tensor, filters: int, kernel_size: int = 3, strides: int = 1, pool: bool = False) -> tf.Tensor:
         """
         Creates a convolutional block with Conv2D, BatchNormalization, ReLU activation, and optionally MaxPooling.
@@ -104,6 +106,8 @@ class DeepSign:
         Returns:
             model (tf.keras.Model): Compiled Keras model for the Siamese network.
         """
+        logging.info("Building DeepSign model with input shape: %s, embedding dimension: %d, head units: %d, dropout: %.2f", input_shape, embedding_dim, head_units, dropout)
+        
         encoder = self.build_encoder(input_shape, embedding_dim=embedding_dim)
 
         input_a = tf.keras.layers.Input(shape=input_shape, name="img_a")
@@ -126,8 +130,32 @@ class DeepSign:
         out = tf.keras.layers.Dense(1, activation="sigmoid", name="is_same")(x)
 
         model = tf.keras.Model(inputs=[input_a, input_b], outputs=out, name="DeepSign")
+        self.model = model
+        logging.info("Model built successfully with input shape: %s, embedding dimension: %d", input_shape, embedding_dim)
         return model
 
+
+    def compile(self, model: tf.keras.Model) -> None:
+        """
+        Compiles the DeepSign model with specified optimizer, loss function, and metrics.
+
+        Args:
+            model (tf.keras.Model): The Keras model to compile.
+        """
+        logging.info("Compiling the DeepSign model...")
+
+        try:
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=CONFIG['training']['learning_rate']),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=[tf.keras.metrics.BinaryAccuracy(name="accuracy"),
+                        tf.keras.metrics.AUC(name="auc")]
+            )
+        except Exception as e:
+            logging.error("Error compiling the model: %s", e)
+            raise
+        else:
+            logging.info("Model compiled successfully.")
 
 
 
@@ -138,8 +166,12 @@ if __name__ == "__main__":
     embedding_dim = CONFIG['model']['embedding_dim']
 
     deep_sign = DeepSign()
+    
     # Get model summary
-    deep_sign.get_model_summary()
+    #deep_sign.get_model_summary()
+
+    # Build the model
+    model = deep_sign.build_model(input_shape=(img_height, img_width, 1), embedding_dim=embedding_dim)
     
     # Initialize DataParser
     #data_parser = DataParser()
