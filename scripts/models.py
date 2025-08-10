@@ -93,7 +93,7 @@ class DeepSign:
         return model
 
     
-    def build_model(self, input_shape:Tuple[int,int,int], embedding_dim:int=128, head_units:int=128, dropout:float=0.3) -> tf.keras.Model:
+    def build_and_compile_model(self, input_shape:Tuple[int,int,int], embedding_dim:int=128, head_units:int=128, dropout:float=0.3) -> tf.keras.Model:
         """
         Builds a Siamese network model for comparing pairs of images.
         
@@ -132,10 +132,13 @@ class DeepSign:
         model = tf.keras.Model(inputs=[input_a, input_b], outputs=out, name="DeepSign")
         self.model = model
         logging.info("Model built successfully with input shape: %s, embedding dimension: %d", input_shape, embedding_dim)
+
+        # Compile the model
+        model = self.compile(model)
         return model
 
 
-    def compile(self, model: tf.keras.Model) -> None:
+    def compile(self, model: tf.keras.Model) -> tf.keras.Model:
         """
         Compiles the DeepSign model with specified optimizer, loss function, and metrics.
 
@@ -156,6 +159,7 @@ class DeepSign:
             raise
         else:
             logging.info("Model compiled successfully.")
+            return model
 
 
 
@@ -170,13 +174,5 @@ if __name__ == "__main__":
     # Get model summary
     #deep_sign.get_model_summary()
 
-    # Build the model
-    model = deep_sign.build_model(input_shape=(img_height, img_width, 1), embedding_dim=embedding_dim)
-
-    # Compile the model
-    deep_sign.compile(model)
-    
-    # Initialize DataParser
-    #data_parser = DataParser()
-    # Example of how to use test_batches (assuming dataset is set)
-    # data_parser.test_batches(num_batches=2)
+    # Build and compile the model
+    model = deep_sign.build_and_compile_model(input_shape=(img_height, img_width, 1), embedding_dim=embedding_dim)

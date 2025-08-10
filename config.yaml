@@ -13,6 +13,9 @@ data:
   train_pairs: "../data/sign_data/train_data.csv"
   test_pairs: "../data/sign_data/test_data.csv"
   train_serialized_path: "../data/train_pairs.tfrecord"
+  HuggingFace:
+    train_repo_id: "23daVinci/IDCAR_Signature_Verification_Dataset_Serialized"
+    train_filename: "train_pairs.tfrecord"
   img_height: 128
   img_width: 256
   batch_size: 32
@@ -25,7 +28,7 @@ model:
   pretrained: False
 
 training:
-  epochs: 50
+  epochs: 1
   learning_rate: 0.0001
   loss: 'binary_crossentropy'
   optimizer: "adam"
