@@ -172,6 +172,9 @@ if __name__ == "__main__":
 
     # Build the model
     model = deep_sign.build_model(input_shape=(img_height, img_width, 1), embedding_dim=embedding_dim)
+
+    # Compile the model
+    deep_sign.compile(model)
     
     # Initialize DataParser
     #data_parser = DataParser()
