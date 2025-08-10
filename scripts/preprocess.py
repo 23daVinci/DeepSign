@@ -221,7 +221,7 @@ class DataParser:
         """
         try:
             print(f"Loading TFRecord file from: {tfrecord_path}")
-            dataset = tf.data.TFRecordDataset(tfrecord_path)
+            dataset = tf.data.TFRecordDataset(tfrecord_path, buffer_size=CONFIG['data']['TFRecord_buffer_size'])
         except Exception as e:
             LOGGER.error(f"TFRecord file not found at {tfrecord_path}: {e}")
             raise FileNotFoundError(f"TFRecord file not found at {tfrecord_path}: {e}")
