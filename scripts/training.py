@@ -112,6 +112,16 @@ class DeepSignTrainer:
             logging.info("Training completed successfully.")
         
 
+    def get_trained_model(self) -> tf.keras.Model:
+        """
+        Returns the trained model.
+
+        Returns:
+            tf.keras.Model: The trained DeepSign model.
+        """
+        return self.model
+
+
 
 
 if __name__ == "__main__":
