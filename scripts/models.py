@@ -27,6 +27,17 @@ class DeepSign:
         LOGGER.info("DeepSign model initialized.")
         pass
 
+    
+    def get_model_summary(self) -> None:
+        with open('../artifacts/model_summary.txt', 'w', encoding="utf-8") as f:
+            model = self.build_model(
+                input_shape=(CONFIG['data']['img_height'], CONFIG['data']['img_width'], 1),
+                embedding_dim=CONFIG['model']['embedding_dim']
+            )
+            model.summary(print_fn=lambda x: f.write(x + '\n'))
+        print("Model summary saved to 'artifacs/model_summary.txt'")
+
+    
     def conv_block(self, x: tf.Tensor, filters: int, kernel_size: int = 3, strides: int = 1, pool: bool = False) -> tf.Tensor:
         """
         Creates a convolutional block with Conv2D, BatchNormalization, ReLU activation, and optionally MaxPooling.
@@ -127,11 +138,8 @@ if __name__ == "__main__":
     embedding_dim = CONFIG['model']['embedding_dim']
 
     deep_sign = DeepSign()
-    model = deep_sign.build_model(
-                                    input_shape=(img_height, img_width, 1), 
-                                    embedding_dim=embedding_dim
-                                )
-    print(model.summary())
+    # Get model summary
+    deep_sign.get_model_summary()
     
     # Initialize DataParser
     #data_parser = DataParser()
