@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from utils import load_config
 from preprocess import DataParser
+from models import DeepSign
 
 ##########################################################################
 
@@ -34,10 +35,10 @@ class DeepSignTrainer:
         else:
             logging.info(f"Dataset loaded.")
 
-        # Build the model
+        # Build and get the model
+        self.model = self._get_model()
 
         
-
     def _get_dataset(self) -> tf.data.Dataset:
         """        
         Loads the training dataset from the specified TFRecord file.
@@ -50,7 +51,27 @@ class DeepSignTrainer:
 
 
     def _get_model(self) -> tf.keras.Model:
-        pass
+        """
+        Builds and compiles the DeepSign model.
+        
+        Returns:
+            tf.keras.Model: The compiled DeepSign model.
+        """
+        img_height = CONFIG['data']['img_height']
+        img_width = CONFIG['data']['img_width']
+        embedding_dim = CONFIG['model']['embedding_dim']
+
+        try:
+            deep_sign = DeepSign()
+            model = deep_sign.build_model(
+                                            input_shape=(img_height, img_width, 1),
+                                            embedding_dim=embedding_dim
+                                        )
+        except Exception as e:
+            logging.error(f"Error building model: {e}")
+            raise
+        else:
+            return model
 
 
     def train(self, model: tf.keras.Model, train_dataset: tf.data.Dataset, val_dataset: tf.data.Dataset | None) -> None:
