@@ -26,6 +26,7 @@ logging.basicConfig(level=logging.INFO,
 class DeepSignTrainer:
     def __init__(self):
         logging.info("DeepSignTrainer initialized.")
+        print(tf.test.gpu_device_name()) 
 
         # Get the dataset
         try:

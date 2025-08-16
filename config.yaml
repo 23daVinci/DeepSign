@@ -1,7 +1,7 @@
 # config.yaml
 
 project:
-  name: signature-verification
+  name: DeepSign
   seed: 42
   device: "cpu"  # or "cuda"
 
@@ -29,7 +29,7 @@ model:
   pretrained: False
 
 training:
-  epochs: 1
+  epochs: 30
   learning_rate: 0.0001
   loss: 'binary_crossentropy'
   optimizer: "adam"
