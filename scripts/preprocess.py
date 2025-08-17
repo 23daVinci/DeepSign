@@ -170,6 +170,25 @@ class DataParser:
         self.dataset = None
 
     
+    def _count_records(self, dataset: tf.data.Dataset) -> int:
+        """
+        Counts the number of records in the dataset.
+
+        Args:
+            dataset (tf.data.Dataset): The TensorFlow dataset to count records in.
+
+        Returns:
+            int: The number of records in the dataset.        
+        """
+        try:
+            records_count = dataset.reduce(0, lambda x, _: x + 1).numpy()
+        except Exception as e:
+            LOGGER.error(f"Error counting records in dataset: {e}")
+            raise ValueError(f"Error counting records in dataset: {e}")
+        
+        return records_count
+
+    
     def test_batches(self, num_batches: int = 1):
         """        
         Displays a few batches of images from the dataset for visual inspection.
