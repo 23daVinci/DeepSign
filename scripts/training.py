@@ -106,6 +106,7 @@ class DeepSignTrainer:
                                 )
                             ]
                           )
+            self.model.save('SavedModel')
         except Exception as e:
             logging.error(f"Error during training: {e}")
             raise
