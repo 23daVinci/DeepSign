@@ -93,6 +93,17 @@ class DeepSignTrainer:
 
 
     def train(self) -> None:
+        """
+        Trains the DeepSign model using the loaded dataset.
+
+        Raises:
+            Exception: If an error occurs during training.
+        """
+        if self.model is None:
+            raise ValueError("Model is not initialized. Cannot proceed with training.")
+        if self.dataset is None:
+            raise ValueError("Dataset is not loaded. Cannot proceed with training.")
+        
         try:
             logging.info("Starting training...")
             self.model.fit(
@@ -106,7 +117,6 @@ class DeepSignTrainer:
                                 )
                             ]
                           )
-            self.model.save('SavedModel')
         except Exception as e:
             logging.error(f"Error during training: {e}")
             raise
@@ -114,14 +124,19 @@ class DeepSignTrainer:
             logging.info("Training completed successfully.")
         
 
-    def get_trained_model(self) -> tf.keras.Model:
+    def save_model(self) -> None:
         """
-        Returns the trained model.
+        Saves the trained model to the specified path.
 
-        Returns:
-            tf.keras.Model: The trained DeepSign model.
+        Raises:
+            Exception: If an error occurs during saving.
         """
-        return self.model
+        try:
+            self.model.export(CONFIG['model']['save_path'])
+            logging.info(f"Model saved successfully at {CONFIG['model']['save_path']}.")
+        except Exception as e:
+            logging.error(f"Error saving model: {e}")
+            raise
 
 
 
@@ -129,5 +144,7 @@ class DeepSignTrainer:
 if __name__ == "__main__":
     trainer = DeepSignTrainer()
     # Start training
-    trainer.train()
+    #trainer.train()
+    # Save the trained model
+    trainer.save_model()
 
