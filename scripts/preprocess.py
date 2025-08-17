@@ -189,6 +189,32 @@ class DataParser:
         return records_count
 
     
+    def _get_train_and_val_sets(self, dataset: tf.data.Dataset) -> tuple:
+        """
+        Splits the dataset into training and validation sets based on the configured validation fraction.
+
+        Args:
+            dataset (tf.data.Dataset): The TensorFlow dataset to split.
+
+        Returns:
+            tuple: A tuple containing the training and validation datasets.        
+        """
+        val_fraction = CONFIG['data']['val_fraction']
+
+        if val_fraction >= 1.0:
+            raise ValueError("Validation fractions must be less than 1.0")
+        
+        total_records = self._count_records(dataset)
+        val_size = int(total_records * val_fraction)
+
+        val_dataset = dataset.take(val_size)
+        train_dataset = dataset.skip(val_size)
+
+        return (train_dataset, val_dataset)
+
+
+
+
     def test_batches(self, num_batches: int = 1):
         """        
         Displays a few batches of images from the dataset for visual inspection.
@@ -266,6 +292,9 @@ class DataParser:
         # Apply parsing function to each example in the dataset
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.shuffle(CONFIG['data']['shuffle_buffer_size']) 
+
+        # TODO -Split into training and validation sets
+
         dataset = dataset.batch(batch_size)
         dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
