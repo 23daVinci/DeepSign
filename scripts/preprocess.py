@@ -165,9 +165,10 @@ class DataParser:
             Creates a TensorFlow dataset from a TFRecord file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         LOGGER.info("DataParser initialized.")
-        self.dataset = None
+        self.train_dataset = None
+        self.val_dataset = None
 
     
     def _count_records(self, dataset: tf.data.Dataset) -> int:
@@ -199,7 +200,7 @@ class DataParser:
         Returns:
             tuple: A tuple containing the training and validation datasets.        
         """
-        val_fraction = CONFIG['data']['val_fraction']
+        val_fraction = CONFIG['training']['val_fraction']
 
         if val_fraction >= 1.0:
             raise ValueError("Validation fractions must be less than 1.0")
@@ -211,8 +212,6 @@ class DataParser:
         train_dataset = dataset.skip(val_size)
 
         return (train_dataset, val_dataset)
-
-
 
 
     def test_batches(self, num_batches: int = 1):
@@ -273,15 +272,18 @@ class DataParser:
         return (img1, img2), label
 
 
-    def get_dataset(self, tfrecord_path: str, batch_size: int = 32) -> tf.data.Dataset:
+    def get_dataset(self, tfrecord_path: str, batch_size: int = 32) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         """
         Creates a TensorFlow dataset from a TFRecord file.
+        
         Args:
             tfrecord_path (str): Path to the TFRecord file.
             batch_size (int): Size of the batches to be returned by the dataset.
+        
         Returns:
-            tf.data.Dataset: A TensorFlow dataset ready for training.
+            tuple: A tuple containing the training and validation datasets.
         """
+
         try:
             print(f"Loading TFRecord file from: {tfrecord_path}")
             dataset = tf.data.TFRecordDataset(tfrecord_path, buffer_size=CONFIG['data']['TFRecord_buffer_size'])
@@ -293,13 +295,21 @@ class DataParser:
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.shuffle(CONFIG['data']['shuffle_buffer_size']) 
 
-        # TODO -Split into training and validation sets
+        # TODO - Split into training and validation sets
+        train_dataset, val_dataset = self._get_train_and_val_sets(dataset)
 
-        dataset = dataset.batch(batch_size)
-        dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        # Creating batches
+        train_dataset = train_dataset.batch(batch_size)
+        val_dataset = val_dataset.batch(batch_size)
 
-        self.dataset = dataset
-        return dataset
+        # Prefetching 
+        train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+        val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+
+        return (self.train_dataset, self.val_dataset)
 
 
 
@@ -312,7 +322,7 @@ if __name__ == "__main__":
 
     data_parser = DataParser()
     # Parse the training TFRecord file and create a dataset
-    ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
+    train_ds, val_ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
 
     # Test the dataset by displaying a few batches of images
     #data_parser.test_batches(num_batches=1)
