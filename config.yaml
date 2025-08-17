@@ -27,9 +27,10 @@ model:
   architecture: "SiameseNet"
   embedding_dim: 128
   pretrained: False
+  save_path: "../trained_model"
 
 training:
-  epochs: 30
+  epochs: 1
   learning_rate: 0.0001
   loss: 'binary_crossentropy'
   optimizer: "adam"
