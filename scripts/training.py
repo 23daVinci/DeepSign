@@ -24,6 +24,14 @@ logging.basicConfig(level=logging.INFO,
 
 
 class DeepSignTrainer:
+    """
+    A class to handle the training of the DeepSign model.
+    
+    Methods:
+        save_model: Saves the trained model to the specified path.
+        train: Trains the DeepSign model using the loaded dataset.
+    """
+    
     def __init__(self):
         logging.info("DeepSignTrainer initialized.")
         print(tf.test.gpu_device_name()) 
