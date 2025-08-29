@@ -8,14 +8,10 @@ project:
 data:
   dataset_name: IDCAR 2011
   train_dir: "../data/sign_data/train"
-  #val_dir: "../data/sign_data/val"
   test_dir: "../data/sign_data/test"
   train_pairs: "../data/sign_data/train_data.csv"
   test_pairs: "../data/sign_data/test_data.csv"
   train_serialized_path: "../data/train_pairs.tfrecord"
-  HuggingFace:
-    train_repo_id: "23daVinci/IDCAR_Signature_Verification_Dataset_Serialized"
-    train_filename: "train_pairs.tfrecord"
   img_height: 128
   img_width: 256
   batch_size: 32

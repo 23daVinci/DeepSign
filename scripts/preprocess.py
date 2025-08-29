@@ -27,6 +27,8 @@ class DataSerializer:
     This class handles loading images, encoding them, and wrapping them into TensorFlow Example format.
     It also reads image pairs and their labels from a CSV file.
 
+    Note: No preprocessing like resizing or normalization is done here; images are stored in their original form.
+
     Attributes:
         None: This class does not have any instance attributes.
     
@@ -54,11 +56,12 @@ class DataSerializer:
         Returns:
             Byte string representation of the image
         """
-        image = Image.open(img_path).convert('L')  # convert to grayscale
-        image = image.resize((CONFIG['data']['img_width'], CONFIG['data']['img_height']))       # standardize size
+        #image = Image.open(img_path).convert('L')  # convert to grayscale
+        image = Image.open(img_path)
+        #image = image.resize((CONFIG['data']['img_width'], CONFIG['data']['img_height']))       # standardize size
         # Convert to numpy and add channel dimension: [H, W] → [H, W, 1]
         image_array = tf.convert_to_tensor(image, dtype=tf.uint8)
-        image_array = tf.expand_dims(image_array, axis=-1)  # Now shape is (H, W, 1)
+        #image_array = tf.expand_dims(image_array, axis=-1)  # Now shape is (H, W, 1)
         return tf.image.encode_png(image_array)
     
 
@@ -87,7 +90,7 @@ class DataSerializer:
         Serializes image pairs into a TFRecord file.
         
         Args:
-            set (str): The dataset type, can be 'train', 'val', or 'test'.
+            set (str): The dataset type, can be 'train', or 'test'.
 
         Returns:
             None: Writes the serialized data to a TFRecord file.
@@ -96,7 +99,7 @@ class DataSerializer:
         # Get image pairs
         image_pairs = self._get_image_pairs(set)
 
-        with tf.io.TFRecordWriter('../data/train_pairs.tfrecord') as writer:
+        with tf.io.TFRecordWriter(CONFIG['data']['train_serialized_path']) as writer:
             try:
                 for img1_path, img2_path, label in image_pairs:
                     # Get byte string representations of images
@@ -106,10 +109,10 @@ class DataSerializer:
                     example = self.create_example(img1_bytes, img2_bytes, label)
                     writer.write(example.SerializeToString())
             except Exception as e:
-                print(f"Error processing image pair {img1_path}, {img2_path}: {e}")
+                LOGGER.error(f"Error processing image pair {img1_path}, {img2_path}: {e}")
                 raise e
             else:
-                print(f"Serialized {len(image_pairs)} image pairs to TFRecord for {set} set.")
+                LOGGER.info(f"Serialized {len(image_pairs)} image pairs to TFRecord for {set} set.")
 
 
     def _get_image_pairs(self, set: str) -> list[tuple]:
@@ -117,7 +120,7 @@ class DataSerializer:
         Reads the CSV file containing image pairs and their labels, and returns a list of tuples.
         
         Args:
-            set (str): The dataset type, can be 'train', 'val', or 'test'.
+            set (str): The dataset type, can be 'train' or 'test'.
 
         Returns:
             list(tuple): A list of tuples where each tuple contains the paths of two images and their label.
@@ -125,9 +128,6 @@ class DataSerializer:
         if set == 'train':
             CSV_PATH = CONFIG['data']['train_pairs']
             IMG_DIR = CONFIG['data']['train_dir']
-        elif set == 'val':
-            CSV_PATH = CONFIG['data']['val_pairs']   
-            IMG_DIR = CONFIG['data']['val_dir']
         else:
             CSV_PATH = CONFIG['data']['test_pairs']
             IMG_DIR = CONFIG['data']['test_dir']
@@ -319,13 +319,13 @@ class DataParser:
 
 
 if __name__ == "__main__":
-    #serializer = DataSerializer()
+    serializer = DataSerializer()
     # Serialize the training dataset
-    #serializer.serialize('train')
+    serializer.serialize('train')
 
-    data_parser = DataParser()
+    #data_parser = DataParser()
     # Parse the training TFRecord file and create a dataset
-    train_ds, val_ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
+    #train_ds, val_ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
 
     # Test the dataset by displaying a few batches of images
     #data_parser.test_batches(num_batches=1)
