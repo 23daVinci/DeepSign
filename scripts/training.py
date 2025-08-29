@@ -36,14 +36,14 @@ class DeepSignTrainer:
         logging.info("DeepSignTrainer initialized.")
         print(tf.test.gpu_device_name()) 
 
-        # Get the dataset
+        # Get the train and val dataset
         try:
-            self.dataset = self._get_dataset()
+            self.train_data, self.val_data = self._get_dataset()
         except Exception as e:
-            logging.error(f"Error loading dataset: {e}")
+            logging.error(f"Error loading datasets: {e}")
             raise
         else:
-            logging.info(f"Dataset loaded.")
+            logging.info(f"Datasets loaded.")
 
         # Get the compiled model
         self.model = self._get_model()
@@ -88,7 +88,7 @@ class DeepSignTrainer:
 
         downloaded_data = None
         try:
-            downloaded_daa = hf_hub_download(
+            downloaded_data = hf_hub_download(
                                                 repo_id=CONFIG['data']['HuggingFace']['train_repo_id'], 
                                                 filename=CONFIG['data']['HuggingFace']['train_filename'] 
                                             )
@@ -109,13 +109,16 @@ class DeepSignTrainer:
         """
         if self.model is None:
             raise ValueError("Model is not initialized. Cannot proceed with training.")
-        if self.dataset is None:
-            raise ValueError("Dataset is not loaded. Cannot proceed with training.")
+        if self.train_data is None:
+            raise ValueError("Training Dataset is not loaded. Cannot proceed with training.")
+        if self.val_data is None:
+            raise ValueError("Validation Dataset is not loaded. Cannot proceed with training.")
         
         try:
             logging.info("Starting training...")
             self.model.fit(
-                            self.dataset,
+                            self.train_data,
+                            validation_data=self.val_data,
                             epochs=CONFIG['training']['epochs'],
                             callbacks=[
                                 tf.keras.callbacks.EarlyStopping(
@@ -130,9 +133,11 @@ class DeepSignTrainer:
             raise
         else:
             logging.info("Training completed successfully.")
+            self._save_model()
+            logging.info("Model saved successfully after training.")
         
 
-    def save_model(self) -> None:
+    def _save_model(self) -> None:
         """
         Saves the trained model to the specified path.
 
@@ -152,7 +157,7 @@ class DeepSignTrainer:
 if __name__ == "__main__":
     trainer = DeepSignTrainer()
     # Start training
-    #trainer.train()
+    trainer.train()
     # Save the trained model
-    trainer.save_model()
+    #trainer.save_model()
 

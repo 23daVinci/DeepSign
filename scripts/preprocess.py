@@ -295,7 +295,7 @@ class DataParser:
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.shuffle(CONFIG['data']['shuffle_buffer_size']) 
 
-        # TODO - Split into training and validation sets
+        # Split into training and validation sets
         train_dataset, val_dataset = self._get_train_and_val_sets(dataset)
 
         # Creating batches
@@ -310,6 +310,9 @@ class DataParser:
         self.val_dataset = val_dataset
 
         return (self.train_dataset, self.val_dataset)
+
+
+
 
 
 
