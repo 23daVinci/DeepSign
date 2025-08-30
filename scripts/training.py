@@ -36,7 +36,7 @@ class DeepSignTrainer:
         logging.info("DeepSignTrainer initialized.")
         print(tf.test.gpu_device_name()) 
 
-        # Get the train and val dataset
+        # Get the preprocessed train and val dataset
         try:
             self.train_data, self.val_data = self._get_dataset()
         except Exception as e:
@@ -158,6 +158,4 @@ if __name__ == "__main__":
     trainer = DeepSignTrainer()
     # Start training
     trainer.train()
-    # Save the trained model
-    #trainer.save_model()
 
