@@ -261,16 +261,12 @@ class DataParser:
             LOGGER.error(f"Failed to parse example: {e}")
             raise ValueError(f"Failed to parse example: {e}")
         
-        img1 = tf.image.decode_png(parsed['image1'], channels=1)
-        img2 = tf.image.decode_png(parsed['image2'], channels=1)
+        img1 = tf.image.decode_png(parsed['image1'], channels=1) # Decoding as grayscale
+        img2 = tf.image.decode_png(parsed['image2'], channels=1) # Decoding as grayscale
 
         img1 = tf.image.convert_image_dtype(img1, tf.float32)
         img2 = tf.image.convert_image_dtype(img2, tf.float32)
         label = tf.cast(parsed['label'], tf.float32)
-
-        # Converting the image to grayscale
-        img1 = tf.image.rgb_to_grayscale(img1)
-        img2 = tf.image.rgb_to_grayscale(img2)
 
         # Resize images to the target size
         img1 = tf.image.resize_with_pad(img1, CONFIG['data']['img_height'], CONFIG['data']['img_width'])
