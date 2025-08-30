@@ -266,8 +266,19 @@ class DataParser:
 
         img1 = tf.image.convert_image_dtype(img1, tf.float32)
         img2 = tf.image.convert_image_dtype(img2, tf.float32)
-
         label = tf.cast(parsed['label'], tf.float32)
+
+        # Converting the image to grayscale
+        img1 = tf.image.rgb_to_grayscale(img1)
+        img2 = tf.image.rgb_to_grayscale(img2)
+
+        # Resize images to the target size
+        img1 = tf.image.resize_with_pad(img1, CONFIG['data']['img_height'], CONFIG['data']['img_width'])
+        img2 = tf.image.resize_with_pad(img2, CONFIG['data']['img_height'], CONFIG['data']['img_width'])
+
+        # Rescale pixel values to [0, 1]
+        img1 = img1 / 255.0 
+        img2 = img2 / 255.0
         
         return (img1, img2), label
 
@@ -315,17 +326,14 @@ class DataParser:
 
 
 
-
-
-
 if __name__ == "__main__":
-    serializer = DataSerializer()
+    #serializer = DataSerializer()
     # Serialize the training dataset
-    serializer.serialize('train')
+    #serializer.serialize('train')
 
-    #data_parser = DataParser()
+    data_parser = DataParser()
     # Parse the training TFRecord file and create a dataset
-    #train_ds, val_ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
+    train_ds, val_ds = data_parser.get_dataset(CONFIG['data']['train_serialized_path'], batch_size=CONFIG['data']['batch_size'])
 
     # Test the dataset by displaying a few batches of images
     #data_parser.test_batches(num_batches=1)

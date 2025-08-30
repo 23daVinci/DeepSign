@@ -32,12 +32,12 @@ class DeepSign:
         Saves the model summary to a text file.
         """
         with open('../artifacts/model_summary.txt', 'w', encoding="utf-8") as f:
-            model = self.build_model(
+            model = self.build_encoder(
                 input_shape=(CONFIG['data']['img_height'], CONFIG['data']['img_width'], 1),
                 embedding_dim=CONFIG['model']['embedding_dim']
             )
             model.summary(print_fn=lambda x: f.write(x + '\n'))
-        print("Model summary saved to 'artifacs/model_summary.txt'")
+        print("Model summary saved to 'artifacts/model_summary.txt'")
 
 
     def conv_block(self, x: tf.Tensor, filters: int, kernel_size: int = 3, strides: int = 1, pool: bool = False) -> tf.Tensor:
@@ -62,7 +62,7 @@ class DeepSign:
         return x
     
 
-    def build_encoder(self, input_shape:Tuple[int,int,int], embedding_dim:int = 128) -> tf.keras.Model:
+    def build_encoder(self, input_shape: tuple[int, int, int], embedding_dim:int = 128) -> tf.keras.Model:
         """
         Builds a lightweight encoder model for feature extraction from input images.
         
@@ -73,7 +73,7 @@ class DeepSign:
         Returns:
             model (tf.keras.Model): Compiled Keras model for the encoder.
         """
-        logging.info("Building encoder model with input shape: %s and embedding dimension: %d", input_shape, embedding_dim)
+        logging.info("Building encoder model.")
 
         inp = tf.keras.layers.Input(shape=input_shape, name="encoder_input")
         x = self.conv_block(inp, 32, kernel_size=3, pool=True)   # /2
@@ -130,11 +130,11 @@ class DeepSign:
         out = tf.keras.layers.Dense(1, activation="sigmoid", name="is_same")(x)
 
         model = tf.keras.Model(inputs=[input_a, input_b], outputs=out, name="DeepSign")
-        self.model = model
         logging.info("Model built successfully with input shape: %s, embedding dimension: %d", input_shape, embedding_dim)
 
         # Compile the model
         model = self.compile(model)
+        self.model = model
         return model
 
 
@@ -158,7 +158,7 @@ class DeepSign:
             logging.error("Error compiling the model: %s", e)
             raise
         else:
-            logging.info("Model compiled successfully.")
+            logging.info("Model compiled successfully and is ready for training.")
             return model
 
 
