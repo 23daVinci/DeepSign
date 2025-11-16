@@ -34,7 +34,7 @@ class DeepSignTrainer:
     
     def __init__(self):
         logging.info("DeepSignTrainer initialized.")
-        print(tf.test.gpu_device_name()) 
+        print(f"GPU Name: {tf.test.gpu_device_name()}") # '' if no GPU found
 
         # Get the preprocessed train and val dataset
         try:
@@ -55,11 +55,7 @@ class DeepSignTrainer:
 
         Returns:
             tf.data.Dataset: A TensorFlow dataset containing the training data.
-        """
-        if source == 'HF_hub':
-            # Download data from Hugging Face Hub
-            data_path = self._download_data_from_HF_hub()
-            
+        """            
         parser = DataParser()
         return parser.get_dataset(tfrecord_path=CONFIG['data']['train_serialized_path'])
 
@@ -145,7 +141,7 @@ class DeepSignTrainer:
             Exception: If an error occurs during saving.
         """
         try:
-            self.model.export(CONFIG['model']['save_path'])
+            self.model.save(CONFIG['model']['save_path'])
             logging.info(f"Model saved successfully at {CONFIG['model']['save_path']}.")
         except Exception as e:
             logging.error(f"Error saving model: {e}")

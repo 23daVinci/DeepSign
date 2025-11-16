@@ -1,6 +1,7 @@
 import tensorflow as tf
 import io
 import os
+from tqdm import tqdm
 from PIL import Image
 import pandas as pd
 import logging
@@ -58,10 +59,8 @@ class DataSerializer:
         """
         #image = Image.open(img_path).convert('L')  # convert to grayscale
         image = Image.open(img_path)
-        #image = image.resize((CONFIG['data']['img_width'], CONFIG['data']['img_height']))       # standardize size
         # Convert to numpy and add channel dimension: [H, W] → [H, W, 1]
         image_array = tf.convert_to_tensor(image, dtype=tf.uint8)
-        #image_array = tf.expand_dims(image_array, axis=-1)  # Now shape is (H, W, 1)
         return tf.image.encode_png(image_array)
     
 
@@ -101,7 +100,7 @@ class DataSerializer:
 
         with tf.io.TFRecordWriter(CONFIG['data']['train_serialized_path']) as writer:
             try:
-                for img1_path, img2_path, label in image_pairs:
+                for img1_path, img2_path, label in tqdm(image_pairs, desc=f"Writing TFRecord for {set} set."):
                     # Get byte string representations of images
                     img1_bytes = self.load_and_encode_images(img1_path)
                     img2_bytes = self.load_and_encode_images(img2_path)
@@ -190,7 +189,7 @@ class DataParser:
         return records_count
 
     
-    def _get_train_and_val_sets(self, dataset: tf.data.Dataset) -> tuple:
+    def _get_train_and_val_sets(self, dataset: tf.data.Dataset) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         """
         Splits the dataset into training and validation sets based on the configured validation fraction.
 
@@ -264,17 +263,18 @@ class DataParser:
         img1 = tf.image.decode_png(parsed['image1'], channels=1) # Decoding as grayscale
         img2 = tf.image.decode_png(parsed['image2'], channels=1) # Decoding as grayscale
 
-        img1 = tf.image.convert_image_dtype(img1, tf.float32)
-        img2 = tf.image.convert_image_dtype(img2, tf.float32)
+        # All images MUST be the same size to be batched.
+        IMAGE_HEIGHT = CONFIG['data']['img_height']
+        IMAGE_WIDTH = CONFIG['data']['img_width']
+        img1 = tf.image.resize(img1, [IMAGE_HEIGHT, IMAGE_WIDTH])
+        img2 = tf.image.resize(img2, [IMAGE_HEIGHT, IMAGE_WIDTH])
+
+        # Normalize images to [0, 1]
+        # Convert from uint8 (0-255) to float32 (0.0-1.0)
+        img1 = tf.cast(img1, tf.float32) / 255.0
+        img2 = tf.cast(img2, tf.float32) / 255.0
+
         label = tf.cast(parsed['label'], tf.float32)
-
-        # Resize images to the target size
-        img1 = tf.image.resize_with_pad(img1, CONFIG['data']['img_height'], CONFIG['data']['img_width'])
-        img2 = tf.image.resize_with_pad(img2, CONFIG['data']['img_height'], CONFIG['data']['img_width'])
-
-        # Rescale pixel values to [0, 1]
-        img1 = img1 / 255.0 
-        img2 = img2 / 255.0
         
         return (img1, img2), label
 
@@ -300,6 +300,11 @@ class DataParser:
         
         # Apply parsing function to each example in the dataset
         dataset = dataset.map(self.parse_example, num_parallel_calls=tf.data.AUTOTUNE)
+
+        # Caching for performance
+        dataset = dataset.cache()
+
+        # Shuffle dataset
         dataset = dataset.shuffle(CONFIG['data']['shuffle_buffer_size']) 
 
         # Split into training and validation sets

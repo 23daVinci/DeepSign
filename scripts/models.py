@@ -62,6 +62,22 @@ class DeepSign:
         return x
     
 
+    def _resize_with_pad_fn(self, image: tf.Tensor, target_height: int, target_width: int) -> tf.Tensor:
+        """
+        Wraps tf.image.resize_with_pad for use in a Lambda layer.
+        This function receives the entire 4D batch tensor.
+        """
+        # 'image' is already the 4D batch (Batch, H, W, C).
+        # tf.image.resize_with_pad is vectorized and accepts a 4D batch.
+        
+        resized = tf.image.resize_with_pad(
+            image, target_height, target_width, method='bilinear'
+        )
+        
+        # 'resized' is now the 4D batch with the target shape (Batch, Target_H, Target_W, C)
+        return resized
+    
+
     def build_encoder(self, input_shape: tuple[int, int, int], embedding_dim:int = 128) -> tf.keras.Model:
         """
         Builds a lightweight encoder model for feature extraction from input images.
@@ -95,10 +111,11 @@ class DeepSign:
     
     def build_and_compile_model(self, input_shape:Tuple[int,int,int], embedding_dim:int=128, head_units:int=128, dropout:float=0.3) -> tf.keras.Model:
         """
-        Builds a Siamese network model for comparing pairs of images.
+        Builds a Siamese network model with integrated preprocessing.
         
         Args:
-            input_shape (Tuple[int, int, int]): Shape of the input images (height, width, channels).
+            input_shape (Tuple[int, int, int]): Shape of the *preprocessed* images 
+                                                (target_height, target_width, channels).
             embedding_dim (int): Dimension of the output embeddings. Default is 128.
             head_units (int): Number of units in the dense layers of the head. Default is 128.
             dropout (float): Dropout rate for regularization. Default is 0.3.
@@ -106,21 +123,59 @@ class DeepSign:
         Returns:
             model (tf.keras.Model): Compiled Keras model for the Siamese network.
         """
-        logging.info("Building DeepSign model with input shape: %s, embedding dimension: %d, head units: %d, dropout: %.2f", input_shape, embedding_dim, head_units, dropout)
+        logging.info("Building DeepSign model with preprocessing...")
+
+        # NEW: Define the shape and type of the *raw* inputs
+        RAW_INPUT_SHAPE = (None, None, 1)  # (H, W, 1) - accepts any size
+        RAW_INPUT_DTYPE = tf.uint8
         
+        # NEW: Get target dimensions from the 'input_shape' argument
+        TARGET_HEIGHT = input_shape[0]
+        TARGET_WIDTH = input_shape[1]
+
+        # This is what the Lambda layer will output (channels-last)
+        FINAL_ITEM_SHAPE = (TARGET_HEIGHT, TARGET_WIDTH, 1)
+
+        # --- NEW: Build the shared "base_model" that includes preprocessing ---
+        
+        # 1. Define the raw input layer
+        raw_input = tf.keras.layers.Input(shape=RAW_INPUT_SHAPE, dtype=RAW_INPUT_DTYPE, name="raw_input")
+        
+        # 2. Add Resizing layer (using the helper function)
+        resized = tf.keras.layers.Lambda(
+            lambda x: self._resize_with_pad_fn(x, TARGET_HEIGHT, TARGET_WIDTH),
+            name="resize_with_pad",
+            output_shape=FINAL_ITEM_SHAPE
+        )(raw_input)
+        
+        # 3. Add Normalization layer (scales uint8 [0, 255] -> float32 [0, 1])
+        rescaled = tf.keras.layers.Rescaling(scale=1./255.0, name="rescaling")(resized)
+        
+        # 4. Get your *existing* encoder
+        #    It expects the preprocessed shape, which 'rescaled' now has.
         encoder = self.build_encoder(input_shape, embedding_dim=embedding_dim)
 
-        input_a = tf.keras.layers.Input(shape=input_shape, name="img_a")
-        input_b = tf.keras.layers.Input(shape=input_shape, name="img_b")
+        # 5. Connect the preprocessed tensor to the encoder
+        embedding = encoder(rescaled)
+        
+        # 6. Create the final 'base_model'
+        base_model = tf.keras.Model(inputs=raw_input, outputs=embedding, name="preprocessing_plus_encoder")
+        
+        # --- END of new base_model ---
 
-        emb_a = encoder(input_a)  # shape: (batch, embedding_dim)
-        emb_b = encoder(input_b)
+        
+        # --- Build the Siamese model using the *new* base_model ---
+        
+        # NEW: The inputs now accept raw images
+        input_a = tf.keras.layers.Input(shape=RAW_INPUT_SHAPE, dtype=RAW_INPUT_DTYPE, name="img_a")
+        input_b = tf.keras.layers.Input(shape=RAW_INPUT_SHAPE, dtype=RAW_INPUT_DTYPE, name="img_b")
 
-        # similarity features: absolute difference (L1). Optionally add elementwise multiply.
+        # NEW: Use the 'base_model' (with preprocessing) for both inputs
+        emb_a = base_model(input_a)
+        emb_b = base_model(input_b)
+
+        # The rest of your model logic is UNCHANGED
         diff = tf.keras.layers.Lambda(lambda tensors: tf.abs(tensors[0] - tensors[1]))([emb_a, emb_b])
-        # Optionally augment features:
-        # mult = tf.keras.layers.Multiply()([emb_a, emb_b])
-        # features = tf.keras.layers.Concatenate()([diff, mult])
 
         x = tf.keras.layers.Dense(head_units, activation="relu")(diff)
         x = tf.keras.layers.BatchNormalization()(x)
@@ -130,13 +185,16 @@ class DeepSign:
         out = tf.keras.layers.Dense(1, activation="sigmoid", name="is_same")(x)
 
         model = tf.keras.Model(inputs=[input_a, input_b], outputs=out, name="DeepSign")
-        logging.info("Model built successfully with input shape: %s, embedding dimension: %d", input_shape, embedding_dim)
+        
+        logging.info("Model built successfully with integrated preprocessing.")
+        logging.info("Model inputs: [(None, None, 1, uint8), (None, None, 1, uint8)]")
+        logging.info("Model output: (None, 1, float32)")
 
         # Compile the model
         model = self.compile(model)
         self.model = model
         return model
-
+    
 
     def compile(self, model: tf.keras.Model) -> tf.keras.Model:
         """

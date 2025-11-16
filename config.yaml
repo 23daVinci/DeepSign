@@ -23,7 +23,7 @@ model:
   architecture: "SiameseNet"
   embedding_dim: 128
   pretrained: False
-  save_path: "../trained_model"
+  save_path: "../artifacts/trained_model.keras"
 
 training:
   val_fraction: 0.1
