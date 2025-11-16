@@ -326,7 +326,6 @@ class DataParser:
 
 
 
-
 if __name__ == "__main__":
     #serializer = DataSerializer()
     # Serialize the training dataset
