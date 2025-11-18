@@ -144,8 +144,7 @@ class DataSerializer:
                           ]
 
         return image_pair_list
-        
-
+       
 
 
 
@@ -323,6 +322,36 @@ class DataParser:
 
         return (self.train_dataset, self.val_dataset)
 
+
+    def preprocess_image_for_inference(self, image_path):
+        """
+        Loads an image file, decodes it, resizes, and normalizes it
+        identically to the training pipeline.
+        Note: This function does not add the batch dimension. When using with a model, 
+        explicitly add a batch dimension using tf.expand_dims.
+
+        Args:
+            image_path (str): Path to the image file.
+
+        Returns:
+            tf.Tensor: Preprocessed image tensor of shape (H, W, 1).
+        """
+        # 1. Read the raw file bytes
+        raw_bytes = tf.io.read_file(image_path)
+        
+        # 2. Decode as grayscale (1 channel)
+        #    tf.io.decode_image is robust (handles PNG, JPEG, etc.)
+        img = tf.io.decode_image(raw_bytes, channels=1)
+        
+        # 3. Resize to the model's expected input size
+        IMAGE_HEIGHT = CONFIG['data']['img_height']
+        IMAGE_WIDTH = CONFIG['data']['img_width']
+        img = tf.image.resize(img, [IMAGE_HEIGHT, IMAGE_WIDTH])
+        
+        # 4. Normalize pixels from [0, 255] to [0.0, 1.0]
+        img = tf.cast(img, tf.float32) / 255.0
+        
+        return img
 
 
 

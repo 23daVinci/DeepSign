@@ -31,3 +31,30 @@ def preprocess_image_for_inference(image_path):
     img = tf.cast(img, tf.float32) / 255.0
     
     return img
+
+
+def predict_similarity(self, image_path_1, image_path_2, model):
+    """
+    Takes two image paths, preprocesses them, and asks the model 
+    for a similarity score.
+    """
+    # 1. Preprocess both images individually using your EXISTING function
+    # Shape: (H, W, 1)
+    img1 = self.preprocess_image_for_inference(image_path_1)
+    img2 = self.preprocess_image_for_inference(image_path_2)
+
+    # 2. Add the "Batch Dimension"
+    # Models expect inputs as a batch. We create a batch of size 1.
+    # Shape becomes: (1, H, W, 1)
+    img1_batch = tf.expand_dims(img1, axis=0)
+    img2_batch = tf.expand_dims(img2, axis=0)
+
+    # 3. Pass inputs as a LIST to the model
+    # The model expects [input_layer_1, input_layer_2]
+    prediction = model.predict([img1_batch, img2_batch])
+
+    # 4. Extract the score
+    # The output is a numpy array like [[0.85]]. We want the float 0.85.
+    similarity_score = prediction[0][0]
+    
+    return similarity_score
