@@ -259,8 +259,12 @@ class DataParser:
             LOGGER.error(f"Failed to parse example: {e}")
             raise ValueError(f"Failed to parse example: {e}")
         
-        img1 = tf.image.decode_png(parsed['image1'], channels=1) # Decoding as grayscale
-        img2 = tf.image.decode_png(parsed['image2'], channels=1) # Decoding as grayscale
+        img1 = tf.image.decode_image(parsed['image1'], channels=1, expand_animations=False) # Decoding as grayscale
+        img2 = tf.image.decode_image(parsed['image2'], channels=1, expand_animations=False) # Decoding as grayscale
+
+        # [None, None, 1] means: Unknown Height, Unknown Width, 1 Channel
+        img1.set_shape([None, None, 1])
+        img2.set_shape([None, None, 1])
 
         # All images MUST be the same size to be batched.
         IMAGE_HEIGHT = CONFIG['data']['img_height']
@@ -341,7 +345,9 @@ class DataParser:
         
         # 2. Decode as grayscale (1 channel)
         #    tf.io.decode_image is robust (handles PNG, JPEG, etc.)
-        img = tf.io.decode_image(raw_bytes, channels=1)
+        img = tf.io.decode_image(raw_bytes, channels=1, expand_animations=False)
+
+        img.set_shape([None, None, 1])
         
         # 3. Resize to the model's expected input size
         IMAGE_HEIGHT = CONFIG['data']['img_height']
