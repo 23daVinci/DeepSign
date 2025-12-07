@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SigVerify | Siamese Network Authentication</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .upload-zone {
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23CBD5E1FF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            background-color: #F8FAFC;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%233B82F6FF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transform: translateY(-2px);
+        }
+
+        .loader {
+            border-top-color: #3B82F6;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-signature"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">SigVerify</span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
+                    <a href="#how-it-works" class="hover:text-blue-600 transition">Technology</a>
+                    <a href="#demo" class="hover:text-blue-600 transition">Live Demo</a>
+                    <a href="#api-docs" class="hover:text-blue-600 transition">API Docs</a>
+                </div>
+                <div>
+                    <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-slate-900 transition text-xl">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 overflow-hidden">
+        <div class="absolute inset-0 -z-10">
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div class="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-blue-400 opacity-20 blur-[100px]"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-8 border border-blue-100">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Powered by Siamese Neural Networks
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+                Identity verification based on <br>
+                <span class="text-blue-600">signature similarity.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+                Detect forgeries with high precision using deep learning. Our model compares geometric and structural features to authenticate signatures instantly via FastAPI.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#demo" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2">
+                    Try the Demo <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="#how-it-works" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                    How it Works
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Interface -->
+    <section id="demo" class="py-20 bg-white border-y border-slate-100">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Live Verification Demo</h2>
+                <p class="text-slate-500 mt-2">Upload a genuine reference and a questioned signature to compare.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 md:p-8">
+                <!-- Grid for Uploads -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+                    
+                    <!-- VS Badge (Desktop Only) -->
+                    <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-slate-900 rounded-full items-center justify-center text-white font-bold z-10 border-4 border-white shadow-lg">
+                        VS
+                    </div>
+
+                    <!-- Reference Image -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-semibold text-slate-700"><i class="fa-solid fa-check-circle text-green-500 mr-2"></i>Reference Signature</h3>
+                            <span class="text-xs font-mono text-slate-400">original.png</span>
+                        </div>
+                        
+                        <div class="upload-zone h-64 rounded-xl flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group bg-slate-50" id="drop-ref" onclick="document.getElementById('input-ref').click()">
+                            <input type="file" id="input-ref" class="hidden" accept="image/*" onchange="handleFileSelect(event, 'ref')">
+                            
+                            <!-- Empty State -->
+                            <div id="empty-ref" class="text-center p-6 transition-opacity duration-300">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-file-signature text-2xl"></i>
+                                </div>
+                                <p class="text-sm font-medium text-slate-700">Click or Drag Reference</p>
+                                <p class="text-xs text-slate-400 mt-1">PNG, JPG up to 5MB</p>
+                            </div>
+
+                            <!-- Preview State -->
+                            <img id="preview-ref" class="absolute inset-0 w-full h-full object-contain p-4 hidden bg-white" alt="Reference Preview">
+                            
+                            <!-- Remove Button -->
+                            <button id="btn-remove-ref" onclick="removeImage(event, 'ref')" class="absolute top-2 right-2 w-8 h-8 bg-slate-900/10 hover:bg-red-500 text-slate-700 hover:text-white rounded-full hidden items-center justify-center transition backdrop-blur-sm">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Questioned Image -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-semibold text-slate-700"><i class="fa-solid fa-question-circle text-amber-500 mr-2"></i>Questioned Signature</h3>
+                            <span class="text-xs font-mono text-slate-400">test.png</span>
+                        </div>
+                        
+                        <div class="upload-zone h-64 rounded-xl flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group bg-slate-50" id="drop-test" onclick="document.getElementById('input-test').click()">
+                            <input type="file" id="input-test" class="hidden" accept="image/*" onchange="handleFileSelect(event, 'test')">
+                            
+                            <!-- Empty State -->
+                            <div id="empty-test" class="text-center p-6 transition-opacity duration-300">
+                                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+                                </div>
+                                <p class="text-sm font-medium text-slate-700">Click or Drag Questioned</p>
+                                <p class="text-xs text-slate-400 mt-1">PNG, JPG up to 5MB</p>
+                            </div>
+
+                            <!-- Preview State -->
+                            <img id="preview-test" class="absolute inset-0 w-full h-full object-contain p-4 hidden bg-white" alt="Test Preview">
+
+                            <!-- Remove Button -->
+                            <button id="btn-remove-test" onclick="removeImage(event, 'test')" class="absolute top-2 right-2 w-8 h-8 bg-slate-900/10 hover:bg-red-500 text-slate-700 hover:text-white rounded-full hidden items-center justify-center transition backdrop-blur-sm">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Area -->
+                <div class="mt-8 flex flex-col items-center">
+                    <button id="verify-btn" onclick="verifySignatures()" disabled class="px-8 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-lg">
+                        <span id="btn-text">Analyze Signatures</span>
+                        <div id="btn-loader" class="loader w-4 h-4 border-2 border-white/30 rounded-full hidden"></div>
+                    </button>
+                    <p class="text-xs text-slate-400 mt-3 flex items-center gap-1">
+                        <i class="fa-solid fa-lock"></i> Data processed securely via FastAPI
+                    </p>
+                </div>
+
+                <!-- Results Section (Hidden by default) -->
+                <div id="results-panel" class="hidden mt-8 border-t border-slate-100 pt-8 animate-fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Score Card -->
+                        <div class="col-span-1 md:col-span-2 bg-slate-50 rounded-xl p-6 border border-slate-100">
+                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Similarity Analysis</h4>
+                            <div class="flex items-end gap-2 mb-2">
+                                <span class="text-4xl font-bold text-slate-900" id="score-val">0%</span>
+                                <span class="text-sm text-slate-500 mb-1">match confidence</span>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                                <div id="score-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2">Euclidean Distance: <span id="euclidean-dist" class="font-mono text-slate-600">0.00</span></p>
+                        </div>
+
+                        <!-- Verdict Card -->
+                        <div id="verdict-card" class="bg-green-50 border border-green-100 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                            <div id="verdict-icon" class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl mb-3">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <h3 id="verdict-title" class="text-lg font-bold text-green-800">Genuine</h3>
+                            <p id="verdict-desc" class="text-sm text-green-600 mt-1">High similarity detected.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900">Under the Hood</h2>
+                <p class="text-slate-500 mt-2">Deep learning architecture designed for one-shot learning.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Siamese Network</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Two identical subnetworks process the reference and questioned signatures simultaneously, sharing the exact same weights and parameters.
+                    </p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-vector-square"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Feature Embedding</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        The images are converted into low-dimensional feature vectors (embeddings). The network learns to place similar signatures close together in this space.
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-ruler-combined"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Distance Metric</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        We calculate the Euclidean distance between the two vectors. If the distance is below a learned threshold, the signature is verified as genuine.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center gap-2 mb-4 md:mb-0">
+                    <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                        <i class="fa-solid fa-signature"></i>
+                    </div>
+                    <span class="text-slate-100 font-bold">SigVerify</span>
+                </div>
+                <div class="text-sm">
+                    &copy; 2023 Signature Verification Project. Built with PyTorch & FastAPI.
+                </div>
+                <div class="flex gap-4 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // State
+        let files = {
+            ref: null,
+            test: null
+        };
+
+        // Initialize Drag and Drop listeners
+        ['ref', 'test'].forEach(type => {
+            const dropZone = document.getElementById(`drop-${type}`);
+            
+            // Drag Enter
+            dropZone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            // Drag Over
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            // Drag Leave
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+
+            // Drop
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    handleFile(file, type);
+                }
+            });
+        });
+
+        // Handle Input Change
+        function handleFileSelect(event, type) {
+            const file = event.target.files[0];
+            if (file) handleFile(file, type);
+        }
+
+        // Process File
+        function handleFile(file, type) {
+            files[type] = file;
+            
+            // Read and Preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewImg = document.getElementById(`preview-${type}`);
+                const emptyState = document.getElementById(`empty-${type}`);
+                const removeBtn = document.getElementById(`btn-remove-${type}`);
+                
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('hidden');
+                emptyState.classList.add('opacity-0');
+                setTimeout(() => emptyState.classList.add('hidden'), 300);
+                removeBtn.classList.remove('hidden');
+                removeBtn.classList.add('flex');
+            };
+            reader.readAsDataURL(file);
+
+            checkReady();
+        }
+
+        // Remove Image
+        function removeImage(e, type) {
+            e.stopPropagation(); // Prevent opening file dialog
+            files[type] = null;
+            
+            const previewImg = document.getElementById(`preview-${type}`);
+            const emptyState = document.getElementById(`empty-${type}`);
+            const removeBtn = document.getElementById(`btn-remove-${type}`);
+            const fileInput = document.getElementById(`input-${type}`);
+
+            previewImg.src = '';
+            previewImg.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            setTimeout(() => emptyState.classList.remove('opacity-0'), 10);
+            removeBtn.classList.add('hidden');
+            removeBtn.classList.remove('flex');
+            fileInput.value = ''; // Reset input
+
+            // Hide results if open
+            document.getElementById('results-panel').classList.add('hidden');
+            checkReady();
+        }
+
+        // Check if both files are present
+        function checkReady() {
+            const btn = document.getElementById('verify-btn');
+            if (files.ref && files.test) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+            }
+        }
+
+        // --- MOCK API CALL (Replace this with actual FastAPI Code) ---
+        async function verifySignatures() {
+            const btn = document.getElementById('verify-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            const resultsPanel = document.getElementById('results-panel');
+
+            // UI Loading State
+            btn.disabled = true;
+            btnText.textContent = "Analyzing...";
+            btnLoader.classList.remove('hidden');
+            resultsPanel.classList.add('hidden');
+
+            /* =========================================
+               FAST API INTEGRATION INSTRUCTIONS
+               =========================================
+               To connect your actual backend:
+               
+               1. Prepare FormData:
+                  const formData = new FormData();
+                  formData.append('reference', files.ref);
+                  formData.append('test', files.test);
+
+               2. Fetch (assuming your endpoint is /verify):
+                  try {
+                      const response = await fetch('http://localhost:8000/verify', {
+                          method: 'POST',
+                          body: formData
+                      });
+                      const data = await response.json();
+                      updateUIWithResult(data.score, data.is_match);
+                  } catch (error) {
+                      console.error(error);
+                      alert("API Error");
+                  }
+               
+               For this demo, we will use a setTimeOut to simulate the network request.
+            */
+
+            setTimeout(() => {
+                // Mock Logic: 
+                // We'll generate a random score for demonstration.
+                // In production, this data comes from your Siamese network response.
+                
+                const mockScore = Math.random() * 100;
+                const isMatch = mockScore > 50; 
+                
+                updateUIWithResult(mockScore, isMatch);
+
+                // Reset Button
+                btn.disabled = false;
+                btnText.textContent = "Analyze Signatures";
+                btnLoader.classList.add('hidden');
+
+            }, 2000); // 2 second mock delay
+        }
+
+        function updateUIWithResult(score, isMatch) {
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreVal = document.getElementById('score-val');
+            const scoreBar = document.getElementById('score-bar');
+            const distVal = document.getElementById('euclidean-dist');
+            const verdictCard = document.getElementById('verdict-card');
+            const verdictIcon = document.getElementById('verdict-icon');
+            const verdictTitle = document.getElementById('verdict-title');
+            const verdictDesc = document.getElementById('verdict-desc');
+
+            // Show Panel
+            resultsPanel.classList.remove('hidden');
+            
+            // Format Score
+            const finalScore = score.toFixed(1);
+            scoreVal.textContent = finalScore + '%';
+            
+            // Animate Bar
+            setTimeout(() => {
+                scoreBar.style.width = finalScore + '%';
+            }, 100);
+
+            // Mock Euclidean Distance (inverse of score roughly)
+            distVal.textContent = ((100 - score) / 50).toFixed(4);
+
+            // Update Verdict Styling
+            if (isMatch) {
+                // Genuine
+                scoreBar.className = "h-4 rounded-full transition-all duration-1000 ease-out bg-green-500";
+                verdictCard.className = "bg-green-50 border border-green-100 rounded-xl p-6 flex flex-col items-center justify-center text-center";
+                verdictIcon.className = "w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl mb-3";
+                verdictIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                verdictTitle.className = "text-lg font-bold text-green-800";
+                verdictTitle.textContent = "Genuine Signature";
+                verdictDesc.className = "text-sm text-green-600 mt-1";
+                verdictDesc.textContent = "The structural features match the reference.";
+            } else {
+                // Forgery
+                scoreBar.className = "h-4 rounded-full transition-all duration-1000 ease-out bg-red-500";
+                verdictCard.className = "bg-red-50 border border-red-100 rounded-xl p-6 flex flex-col items-center justify-center text-center";
+                verdictIcon.className = "w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mb-3";
+                verdictIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                verdictTitle.className = "text-lg font-bold text-red-800";
+                verdictTitle.textContent = "Potential Forgery";
+                verdictDesc.className = "text-sm text-red-600 mt-1";
+                verdictDesc.textContent = "Significant deviation from reference signature.";
+            }
+        }
+    </script>
+</body>
+</html>

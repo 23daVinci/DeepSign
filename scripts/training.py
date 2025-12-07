@@ -131,7 +131,17 @@ class DeepSignTrainer:
             logging.info("Training completed successfully.")
             self._save_model()
             logging.info("Model saved successfully after training.")
+
+
+    def print_model_summary(self) -> None:
+        """
+        Prints the summary of the DeepSign model.
+        """
+        if self.model is None:
+            raise ValueError("Model is not initialized. Cannot print summary.")
         
+        self.model.summary()
+
 
     def _save_model(self) -> None:
         """
@@ -149,9 +159,9 @@ class DeepSignTrainer:
 
 
 
-
 if __name__ == "__main__":
     trainer = DeepSignTrainer()
+    #trainer.print_model_summary()
     # Start training
     trainer.train()
 
